@@ -57,7 +57,8 @@ contract Project {
     cancelled = true;
   }
 
-  fallback() external payable
+  receive() external payable {}
+  fallback() external payable {}
 
 }
 
