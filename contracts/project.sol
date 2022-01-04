@@ -38,31 +38,29 @@ contract Project {
 
   function withdraw(uint256 _amount) external onlyCreator {
     require (totalContributions >= fundingGoal);
-    require(_amount <= address(this).balance); // is this check built into transfer?
-    // transfer amount to the creator address(msg.sender).transfer(_amount);
+    require(_amount <= address(this).balance); // is this check built into call?
+    (bool success, ) = msg.sender.call{value: _amount}("");
+    require(success, "failed to withdraw");
+    
   }
 
   function getRefund() external {
     require((totalContributions < fundingGoal && block.timestamp >= deadline) || cancelled);
     require(contributors[msg.sender] > 0);
     uint256 contribution = contributors[msg.sender];
-    contributors[msg.sender] -= contribution;
-    // send to them
+    contributors[msg.sender] -= contribution; // need safemath
+    (bool success, ) = msg.sender.call{value: contribution}("");
+    require(success, "failed to send refund");
   }
 
   function cancel() external onlyCreator onlyIfActive {
     cancelled = true;
   }
 
-
-
-// pure internal function for seeing if time up? guard against front running
-
-
-  // need a fallback function
-  // fallback() external payable
+  fallback() external payable
 
 }
 
-//be weary of very big numbers, need a way to catch them
+// be weary of very big numbers, need a way to catch them
 // which uint should we use?
+// pure internal function for seeing if time up? guard against front running
