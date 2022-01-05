@@ -23,14 +23,14 @@ contract Project {
     //timestamp issue, front running
   }
 
-  constructor(uint256 _fundingGoal) {
-    creator = msg.sender;
+  constructor(uint256 _fundingGoal, address _sender) {
+    creator = _sender;
     fundingGoal = _fundingGoal;
     deadline = block.timestamp + 30 days;
   }
 
   function contribute(uint256 _amount) external payable onlyIfActive {
-    require(msg.value >= minContribution);
+    require(msg.value >= minContribution, "contribution must be at least 0.01 ETH");
     uint256 totalContributed = contributors[msg.sender] + _amount; // need safemath
     contributors[msg.sender] = totalContributed;
     // check if total contributed matches correct number of NFTs, if not, give NFTs
@@ -41,10 +41,9 @@ contract Project {
     require(_amount <= address(this).balance); // is this check built into call?
     (bool success, ) = msg.sender.call{value: _amount}("");
     require(success, "failed to withdraw");
-    
   }
 
-  function getRefund() external {
+  function refund() external {
     require((totalContributions < fundingGoal && block.timestamp >= deadline) || cancelled);
     require(contributors[msg.sender] > 0);
     uint256 contribution = contributors[msg.sender];
@@ -59,7 +58,6 @@ contract Project {
 
   receive() external payable {}
   fallback() external payable {}
-
 }
 
 // be weary of very big numbers, need a way to catch them
