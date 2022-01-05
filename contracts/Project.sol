@@ -13,12 +13,12 @@ contract Project {
   // add NFT mappings?
 
   modifier onlyCreator {
-    require(msg.sender == creator);
+    require(msg.sender == creator, "must be project creator");
     _;
   }
 
   modifier onlyIfActive {
-    require(!cancelled && block.timestamp < deadline && totalContributions < fundingGoal);
+    require(!cancelled && block.timestamp < deadline && totalContributions < fundingGoal, "project is not live");
     _;
     //timestamp issue, front running
   }

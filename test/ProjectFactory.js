@@ -30,20 +30,70 @@ describe("Project contract", () => {
       expect(await hardhatProject.creator()).to.equal(creator.address);
     });
   });
+
   describe("contribute()", () => {
-    it("Saves contribution amount", async () => {
-      const hash = await hardhatProject
+    it("Saves new contribution amount", async () => {
+      await hardhatProject
         .connect(addr1)
         .contribute({ value: ethers.utils.parseUnits("0.01", "ether") });
+      const total = await hardhatProject.contributors(addr1.address);
     });
-    // base functionality
-    // amount gets added to mapping for the user
-    // they get an NFT, show up in NFT mapping array
-    // it("Must contribute at least 0.01 ETH", async () => {
-    //   await expect(
-    //     hardhatProject.connect(addr1).contribute(10)
-    //   ).to.be.revertedWith("contribution must be at least 0.01 ETH");
-    // });
-    // it("Can contribute if you're the creator", async () => {});
+    it("Increments contribution amount", async () => {
+      await hardhatProject
+        .connect(addr1)
+        .contribute({ value: ethers.utils.parseUnits("0.01", "ether") });
+      await hardhatProject
+        .connect(addr1)
+        .contribute({ value: ethers.utils.parseUnits("0.02", "ether") });
+      const total = await hardhatProject.contributors(addr1.address);
+      expect(total).to.equal(ethers.utils.parseUnits("0.03", "ether"));
+    });
+    it("Must contribute at least 0.01 ETH", async () => {
+      await expect(
+        hardhatProject
+          .connect(addr1)
+          .contribute({ value: ethers.utils.parseUnits("0.001", "ether") })
+      ).to.be.revertedWith("contribution must be at least 0.01 ETH");
+    });
+    it("Can contribute if you're the creator", async () => {
+      await hardhatProject
+        .connect(creator)
+        .contribute({ value: ethers.utils.parseUnits("0.01", "ether") });
+      const total = await hardhatProject.contributors(creator.address);
+    });
+    // check for NFT awarding
+  });
+
+  describe("cancel()", () => {
+    // add beforeeach that will matter
+    it("Marks contract as cancelled", async () => {
+      const before = await hardhatProject.cancelled();
+      await hardhatProject.connect(creator).cancel();
+      const after = await hardhatProject.cancelled();
+      expect(before).to.not.be.equal(after);
+    });
+    it("Only the creator can cancel", async () => {
+      await expect(hardhatProject.connect(addr1).cancel()).to.be.revertedWith(
+        "must be project creator"
+      );
+    });
+    it("Project must be active", async () => {
+      await hardhatProject.connect(creator).cancel();
+      await expect(hardhatProject.connect(creator).cancel()).to.be.revertedWith(
+        "project is not live"
+      );
+    });
+  });
+
+  describe("refund()", () => {
+    beforeEach(async () => {
+      await hardhatProject
+        .connect(addr1)
+        .contribute({ value: ethers.utils.parseUnits("0.02", "ether") });
+    });
+    it("Returns all contributed funds to a given contributor", async () => {
+      await hardhatProject.connect(addr1).refund();
+      const total = await hardhatProject.contributors(addr1.address);
+    });
   });
 });
