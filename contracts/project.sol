@@ -29,10 +29,11 @@ contract Project {
     deadline = block.timestamp + 30 days;
   }
 
-  function contribute(uint256 _amount) external payable onlyIfActive {
+  function contribute() external payable onlyIfActive {
     require(msg.value >= minContribution, "contribution must be at least 0.01 ETH");
-    uint256 totalContributed = contributors[msg.sender] + _amount; // need safemath
+    uint256 totalContributed = contributors[msg.sender] + msg.value; // need safemath
     contributors[msg.sender] = totalContributed;
+    // increment total contributions
     // check if total contributed matches correct number of NFTs, if not, give NFTs
   }
 

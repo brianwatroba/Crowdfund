@@ -1,7 +1,5 @@
-const chai = require("chai");
-const { expect } = chai;
-const { solidity } = require("ethereum-waffle");
-chai.use(solidity);
+const { expect } = require("chai");
+const BN = ethers.BigNumber;
 
 describe("Project contract", () => {
   let contractFactory;
@@ -20,7 +18,7 @@ describe("Project contract", () => {
     await ProjectFactory.deployed();
 
     [creator, addr1, addr2] = await ethers.getSigners();
-    fundingGoal = 1000000;
+    fundingGoal = 10000;
 
     Project = await ProjectFactory.connect(creator).createProject(fundingGoal);
     ProjectAddress = ProjectFactory.deployedProjects(0);
@@ -32,15 +30,20 @@ describe("Project contract", () => {
       expect(await hardhatProject.creator()).to.equal(creator.address);
     });
   });
-
   describe("contribute()", () => {
-    it("Must contribute at least 0.01 ETH", async () => {
-      await expect(
-        hardhatProject.connect(addr1).contribute(10)
-      ).to.be.revertedWith("contribution must be at least 0.01 ETH");
-      await expect(
-        hardhatProject.connect(addr1).contribute(10)
-      ).to.be.revertedWith("contribution must be at least 0.01 ETH");
+    it("Saves contribution amount", async () => {
+      const hash = await hardhatProject
+        .connect(addr1)
+        .contribute({ value: ethers.utils.parseUnits("0.01", "ether") });
     });
+    // base functionality
+    // amount gets added to mapping for the user
+    // they get an NFT, show up in NFT mapping array
+    // it("Must contribute at least 0.01 ETH", async () => {
+    //   await expect(
+    //     hardhatProject.connect(addr1).contribute(10)
+    //   ).to.be.revertedWith("contribution must be at least 0.01 ETH");
+    // });
+    // it("Can contribute if you're the creator", async () => {});
   });
 });
