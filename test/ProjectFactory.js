@@ -18,7 +18,7 @@ describe("Project contract", () => {
     await ProjectFactory.deployed();
 
     [creator, addr1, addr2] = await ethers.getSigners();
-    fundingGoal = 10000;
+    fundingGoal = ethers.utils.parseUnits("10", "ether");
 
     Project = await ProjectFactory.connect(creator).createProject(fundingGoal);
     ProjectAddress = ProjectFactory.deployedProjects(0);
@@ -38,7 +38,7 @@ describe("Project contract", () => {
         .contribute({ value: ethers.utils.parseUnits("0.01", "ether") });
       const total = await hardhatProject.contributors(addr1.address);
     });
-    it("Increments contribution amount", async () => {
+    it("Can contribute multiple times, increments contribution amount", async () => {
       await hardhatProject
         .connect(addr1)
         .contribute({ value: ethers.utils.parseUnits("0.01", "ether") });
@@ -65,7 +65,6 @@ describe("Project contract", () => {
   });
 
   describe("cancel()", () => {
-    // add beforeeach that will matter
     it("Marks contract as cancelled", async () => {
       const before = await hardhatProject.cancelled();
       await hardhatProject.connect(creator).cancel();
@@ -103,6 +102,28 @@ describe("Project contract", () => {
     it("Updates contract ledger", async () => {
       await hardhatProject.connect(addr1).refund();
       expect(await hardhatProject.contributors(addr1.address)).to.deep.equal(0);
+    });
+  });
+
+  describe("withdraw()", () => {
+    beforeEach(async () => {
+      await hardhatProject
+        .connect(addr1)
+        .contribute({ value: ethers.utils.parseUnits("10", "ether") });
+    });
+    it("Creator can withdraw an amount of funds", async () => {
+      await expect(
+        await hardhatProject
+          .connect(creator)
+          .withdraw(ethers.utils.parseUnits("10", "ether"))
+      ).to.changeEtherBalance(creator, ethers.utils.parseUnits("10", "ether"));
+    });
+    it("Contributors cannot call", async () => {
+      await expect(
+        hardhatProject
+          .connect(addr1)
+          .withdraw(ethers.utils.parseUnits("10", "ether"))
+      ).to.be.revertedWith("must be project creator");
     });
   });
 });

@@ -33,13 +33,13 @@ contract Project {
     require(msg.value >= minContribution, "contribution must be at least 0.01 ETH");
     uint256 totalContributed = contributors[msg.sender] + msg.value; // need safemath
     contributors[msg.sender] = totalContributed;
-    // increment total contributions
+    totalContributions += msg.value; // need safemath
     // check if total contributed matches correct number of NFTs, if not, give NFTs
   }
 
   function withdraw(uint256 _amount) external onlyCreator {
-    require (totalContributions >= fundingGoal);
-    require(_amount <= address(this).balance); // is this check built into call?
+    require (totalContributions >= fundingGoal, "project must be fully funded");
+    require(_amount <= address(this).balance, "amount requested for withdrawal must exist in contract"); // is this check built into call?
     (bool success, ) = msg.sender.call{value: _amount}("");
     require(success, "failed to withdraw");
   }
