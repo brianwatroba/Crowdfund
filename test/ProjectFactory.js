@@ -90,10 +90,19 @@ describe("Project contract", () => {
       await hardhatProject
         .connect(addr1)
         .contribute({ value: ethers.utils.parseUnits("0.02", "ether") });
+      await hardhatProject
+        .connect(creator)
+        .contribute({ value: ethers.utils.parseUnits("0.02", "ether") });
+      await hardhatProject.connect(creator).cancel();
     });
     it("Returns all contributed funds to a given contributor", async () => {
+      await expect(
+        await hardhatProject.connect(addr1).refund()
+      ).to.changeEtherBalance(addr1, ethers.utils.parseUnits("0.02", "ether"));
+    });
+    it("Updates contract ledger", async () => {
       await hardhatProject.connect(addr1).refund();
-      const total = await hardhatProject.contributors(addr1.address);
+      expect(await hardhatProject.contributors(addr1.address)).to.deep.equal(0);
     });
   });
 });

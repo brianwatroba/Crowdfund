@@ -45,8 +45,8 @@ contract Project {
   }
 
   function refund() external {
-    require((totalContributions < fundingGoal && block.timestamp >= deadline) || cancelled);
-    require(contributors[msg.sender] > 0);
+    require((totalContributions < fundingGoal && block.timestamp >= deadline) || cancelled, "project must be over");
+    require(contributors[msg.sender] > 0, "must have existing contribution balance");
     uint256 contribution = contributors[msg.sender];
     contributors[msg.sender] -= contribution; // need safemath
     (bool success, ) = msg.sender.call{value: contribution}("");
