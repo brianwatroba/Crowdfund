@@ -39,7 +39,7 @@ describe("Project contract", () => {
         .contribute({ value: ethers.utils.parseUnits("0.01", "ether") });
       const total = await hardhatProject.contributors(addr1.address);
     });
-    it("Can contribute multiple times, increments contribution amount", async () => {
+    it("Can contribute multiple times", async () => {
       await hardhatProject
         .connect(addr1)
         .contribute({ value: ethers.utils.parseUnits("0.01", "ether") });
@@ -56,13 +56,41 @@ describe("Project contract", () => {
           .contribute({ value: ethers.utils.parseUnits("0.001", "ether") })
       ).to.be.revertedWith("contribution must be at least 0.01 ETH");
     });
-    it("Can contribute if you're the creator", async () => {
+    it("Creator can contribute", async () => {
       await hardhatProject
         .connect(creator)
         .contribute({ value: ethers.utils.parseUnits("0.01", "ether") });
       const total = await hardhatProject.contributors(creator.address);
     });
-    // check for NFT awarding
+    it("Awards NFT if contribution >= 1 ETH", async () => {
+      await hardhatProject
+        .connect(addr1)
+        .contribute({ value: ethers.utils.parseUnits("1.3", "ether") });
+      const badgeCount = await hardhatProject.balanceOf(addr1.address);
+      expect(badgeCount).to.deep.equal(1);
+    });
+    it("Awards NFT when contribution total passes 1 ETH", async () => {
+      await hardhatProject
+        .connect(addr1)
+        .contribute({ value: ethers.utils.parseUnits("0.2", "ether") });
+      await hardhatProject
+        .connect(addr1)
+        .contribute({ value: ethers.utils.parseUnits("0.5", "ether") });
+      const beforeOneEth = await hardhatProject.balanceOf(addr1.address);
+      expect(beforeOneEth).to.deep.equal(0);
+      await hardhatProject
+        .connect(addr1)
+        .contribute({ value: ethers.utils.parseUnits("0.3", "ether") });
+      const afterOneEth = await hardhatProject.balanceOf(addr1.address);
+      expect(afterOneEth).to.deep.equal(1);
+    });
+    it("Awards multiple NFTs if single contribution is >= 2 ETH", async () => {
+      await hardhatProject
+        .connect(addr1)
+        .contribute({ value: ethers.utils.parseUnits("3.2", "ether") });
+      const badgeCount = await hardhatProject.balanceOf(addr1.address);
+      expect(badgeCount).to.deep.equal(3);
+    });
   });
 
   describe("cancel()", () => {

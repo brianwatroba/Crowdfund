@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.11;
 
-contract Project {
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "hardhat/console.sol";
+
+contract Project is ERC721 {
+
   // look into storing them in order to minimize slot use
   mapping(address => uint256) public contributors;
   address public creator;
@@ -9,6 +13,7 @@ contract Project {
   uint256 public minContribution = 0.01 ether;
   uint256 public totalContributions = 0;
   uint256 public deadline;
+  uint256 public badgeCount;
   bool public cancelled = false;
   // add NFT mappings?
 
@@ -23,10 +28,11 @@ contract Project {
     //timestamp issue, front running
   }
 
-  constructor(uint256 _fundingGoal, address _sender) {
+  constructor(uint256 _fundingGoal, address _sender) ERC721("Badge", "BDG") {
     creator = _sender;
     fundingGoal = _fundingGoal;
     deadline = block.timestamp + 30 days;
+    badgeCount = 0; // do this in contructor or in base storage?
   }
 
   function contribute() external payable onlyIfActive {
@@ -34,7 +40,8 @@ contract Project {
     uint256 totalContributed = contributors[msg.sender] + msg.value; // need safemath
     contributors[msg.sender] = totalContributed;
     totalContributions += msg.value; // need safemath
-    // check if total contributed matches correct number of NFTs, if not, give NFTs
+    uint256 numToMint = (totalContributed - (balanceOf(msg.sender) * 1 ether)) / 1 ether;
+    awardBadge(msg.sender, numToMint);
   }
 
   function withdraw(uint256 _amount) external onlyCreator {
@@ -53,6 +60,14 @@ contract Project {
     require(success, "failed to send refund");
   }
 
+  function awardBadge(address _contributor, uint256 _count) internal {
+    for (uint i = 1; i <= _count; i++) {
+      uint256 newBadgeId = badgeCount + i;
+      _safeMint(_contributor, newBadgeId);
+    }
+    badgeCount += _count;
+  }
+
   function cancel() external onlyCreator onlyIfActive {
     cancelled = true;
   }
@@ -64,3 +79,4 @@ contract Project {
 // be weary of very big numbers, need a way to catch them
 // which uint should we use?
 // pure internal function for seeing if time up? guard against front running
+// need to test for contracts to be able to do all of this? vs. EOA?
