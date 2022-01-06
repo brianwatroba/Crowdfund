@@ -17,5 +17,4 @@ contract ProjectFactory {
  
   receive() external payable {}
   fallback() external payable {}
-
 }

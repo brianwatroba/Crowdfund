@@ -1,5 +1,4 @@
 const { expect } = require("chai");
-const BN = ethers.BigNumber;
 
 describe("Project contract", () => {
   let contractFactory;
@@ -21,7 +20,7 @@ describe("Project contract", () => {
     fundingGoal = ethers.utils.parseUnits("10", "ether");
 
     Project = await ProjectFactory.connect(creator).createProject(fundingGoal);
-    ProjectAddress = ProjectFactory.deployedProjects(0);
+    ProjectAddress = await ProjectFactory.deployedProjects(0);
     hardhatProject = await ethers.getContractAt("Project", ProjectAddress);
   });
 
@@ -29,7 +28,14 @@ describe("Project contract", () => {
     it("Should set the right creator", async () => {
       expect(await hardhatProject.creator()).to.equal(creator.address);
     });
-    // multiple projects can exist at once
+    it("Factory can create and store multiple Projects", async () => {
+      await ProjectFactory.connect(addr1).createProject(fundingGoal);
+      const ProjectOne = await ProjectFactory.deployedProjects(0);
+      const ProjectTwo = await ProjectFactory.deployedProjects(1);
+      expect(ProjectOne).to.be.properAddress;
+      expect(ProjectTwo).to.be.properAddress;
+      expect(ProjectOne).to.not.equal(ProjectTwo);
+    });
   });
 
   describe("contribute()", () => {
@@ -55,6 +61,38 @@ describe("Project contract", () => {
           .connect(addr1)
           .contribute({ value: ethers.utils.parseUnits("0.001", "ether") })
       ).to.be.revertedWith("contribution must be at least 0.01 ETH");
+    });
+    it("Cannot contribute if project cancelled", async () => {
+      await hardhatProject.connect(creator).cancel();
+      await expect(
+        hardhatProject
+          .connect(addr1)
+          .contribute({ value: ethers.utils.parseUnits("1", "ether") })
+      ).to.be.revertedWith("project is not active");
+    });
+    it("Cannot contribute if project funding goal met", async () => {
+      await hardhatProject
+        .connect(creator)
+        .contribute({ value: ethers.utils.parseUnits("10", "ether") });
+
+      await expect(
+        hardhatProject
+          .connect(addr1)
+          .contribute({ value: ethers.utils.parseUnits("1", "ether") })
+      ).to.be.revertedWith("project is not active");
+    });
+    it("Cannot contribue if deadline passed", async () => {
+      const currentBlock = await ethers.provider.getBlock();
+      await ethers.provider.send("evm_mine", [
+        currentBlock.timestamp + 3600 * 24 * 35,
+      ]);
+      await network.provider.send("evm_mine");
+
+      await expect(
+        hardhatProject
+          .connect(addr1)
+          .contribute({ value: ethers.utils.parseUnits("1", "ether") })
+      ).to.be.revertedWith("project is not active");
     });
     it("Creator can contribute", async () => {
       await hardhatProject
@@ -87,7 +125,7 @@ describe("Project contract", () => {
     it("Awards multiple NFTs if single contribution is >= 2 ETH", async () => {
       await hardhatProject
         .connect(addr1)
-        .contribute({ value: ethers.utils.parseUnits("3.2", "ether") });
+        .contribute({ value: ethers.utils.parseUnits("3", "ether") });
       const badgeCount = await hardhatProject.balanceOf(addr1.address);
       expect(badgeCount).to.deep.equal(3);
     });
@@ -108,7 +146,7 @@ describe("Project contract", () => {
     it("Project must be active", async () => {
       await hardhatProject.connect(creator).cancel();
       await expect(hardhatProject.connect(creator).cancel()).to.be.revertedWith(
-        "project is not live"
+        "project is not active"
       );
     });
   });
@@ -121,16 +159,26 @@ describe("Project contract", () => {
       await hardhatProject
         .connect(creator)
         .contribute({ value: ethers.utils.parseUnits("0.02", "ether") });
-      await hardhatProject.connect(creator).cancel();
     });
     it("Returns all contributed funds to a given contributor", async () => {
+      await hardhatProject.connect(creator).cancel();
       await expect(
         await hardhatProject.connect(addr1).refund()
       ).to.changeEtherBalance(addr1, ethers.utils.parseUnits("0.02", "ether"));
     });
     it("Updates contract ledger", async () => {
+      await hardhatProject.connect(creator).cancel();
       await hardhatProject.connect(addr1).refund();
       expect(await hardhatProject.contributors(addr1.address)).to.deep.equal(0);
+    });
+    it("Cannot use if project funding met", async () => {
+      await hardhatProject
+        .connect(creator)
+        .contribute({ value: ethers.utils.parseUnits("10", "ether") });
+
+      await expect(hardhatProject.connect(addr1).refund()).to.be.revertedWith(
+        "project must be failed"
+      );
     });
   });
 

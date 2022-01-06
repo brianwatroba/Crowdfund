@@ -5,17 +5,16 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "hardhat/console.sol";
 
 contract Project is ERC721 {
-
-  // look into storing them in order to minimize slot use
-  mapping(address => uint256) public contributors;
-  address public creator;
+  
   uint256 public fundingGoal;
   uint256 public minContribution = 0.01 ether;
-  uint256 public totalContributions = 0;
+  uint256 public totalContributions;
   uint256 public deadline;
   uint256 public badgeCount;
   bool public cancelled = false;
-  // add NFT mappings?
+  address public creator;
+  mapping(address => uint256) public contributors;
+ 
 
   modifier onlyCreator {
     require(msg.sender == creator, "must be project creator");
@@ -23,43 +22,46 @@ contract Project is ERC721 {
   }
 
   modifier onlyIfActive {
-    require(!cancelled && block.timestamp < deadline && totalContributions < fundingGoal, "project is not live");
+    require(!cancelled && block.timestamp < deadline && totalContributions < fundingGoal, "project is not active");
     _;
-    //timestamp issue, front running
   }
 
   constructor(uint256 _fundingGoal, address _sender) ERC721("Badge", "BDG") {
     creator = _sender;
     fundingGoal = _fundingGoal;
     deadline = block.timestamp + 30 days;
-    badgeCount = 0; // do this in contructor or in base storage?
   }
 
+  /// @dev Contribute ETH to a project. Awards badge NFT for each 1 ETH contributed
   function contribute() external payable onlyIfActive {
     require(msg.value >= minContribution, "contribution must be at least 0.01 ETH");
-    uint256 totalContributed = contributors[msg.sender] + msg.value; // need safemath
+    uint256 totalContributed = contributors[msg.sender] + msg.value;
     contributors[msg.sender] = totalContributed;
-    totalContributions += msg.value; // need safemath
+    totalContributions += msg.value;
     uint256 numToMint = (totalContributed - (balanceOf(msg.sender) * 1 ether)) / 1 ether;
     awardBadge(msg.sender, numToMint);
   }
 
+  /// @dev Creator can withdraw a number of funds if project meets funding goal
   function withdraw(uint256 _amount) external onlyCreator {
     require (totalContributions >= fundingGoal, "project must be fully funded");
-    require(_amount <= address(this).balance, "amount requested for withdrawal must exist in contract"); // is this check built into call?
+    require(_amount <= address(this).balance, "amount requested for withdrawal must exist in contract");
     (bool success, ) = msg.sender.call{value: _amount}("");
     require(success, "failed to withdraw");
   }
 
+  /// @dev Contributors can get their contribution refunded if project is cancelled or doesn't meet goal
   function refund() external {
-    require((totalContributions < fundingGoal && block.timestamp >= deadline) || cancelled, "project must be over");
+    console.log(totalContributions < fundingGoal, block.timestamp >= deadline);
+    require((totalContributions < fundingGoal && block.timestamp >= deadline) || cancelled, "project must be failed");
     require(contributors[msg.sender] > 0, "must have existing contribution balance");
     uint256 contribution = contributors[msg.sender];
-    contributors[msg.sender] -= contribution; // need safemath
+    contributors[msg.sender] -= contribution;
     (bool success, ) = msg.sender.call{value: contribution}("");
     require(success, "failed to send refund");
   }
 
+  /// @dev Mints a number of badge NFTs for a given contributor
   function awardBadge(address _contributor, uint256 _count) internal {
     for (uint i = 1; i <= _count; i++) {
       uint256 newBadgeId = badgeCount + i;
@@ -68,6 +70,7 @@ contract Project is ERC721 {
     badgeCount += _count;
   }
 
+  /// @dev Creator can cancel campaign if funding goal isn't met by deadline. This is irreversible.
   function cancel() external onlyCreator onlyIfActive {
     cancelled = true;
   }
@@ -76,7 +79,10 @@ contract Project is ERC721 {
   fallback() external payable {}
 }
 
-// be weary of very big numbers, need a way to catch them
-// which uint should we use?
-// pure internal function for seeing if time up? guard against front running
 // need to test for contracts to be able to do all of this? vs. EOA?
+// do I need to add my own storage mappings to show NFT work under the hood
+// badgecount: initialize in constructor or base storage?
+// any pitfalls in using block.timestamp?
+// write tests for modifiers or just test 
+// is require and state change in middle enough for reentrancy? or need a guard?
+// are we graded on our tests?
