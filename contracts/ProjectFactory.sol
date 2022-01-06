@@ -12,8 +12,6 @@ contract ProjectFactory {
     address newProject = address(new Project(_fundingGoal, msg.sender));
     deployedProjects.push(newProject);
   }
-
-  // getter function for 
  
   receive() external payable {}
   fallback() external payable {}

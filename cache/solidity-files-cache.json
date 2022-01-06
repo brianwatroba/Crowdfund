@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/brianwatroba/Documents/TempCode/student.brianwatroba/crowdfund/contracts/Project.sol": {
-      "lastModificationDate": 1641498183306,
-      "contentHash": "75b494fb936788b1f5a0b5727ca05326",
+      "lastModificationDate": 1641507219747,
+      "contentHash": "ee6749c97eef0378739f94b0cfcdef03",
       "sourceName": "contracts/Project.sol",
       "solcConfig": {
         "version": "0.8.11",
@@ -40,8 +40,8 @@
       ]
     },
     "/Users/brianwatroba/Documents/TempCode/student.brianwatroba/crowdfund/contracts/ProjectFactory.sol": {
-      "lastModificationDate": 1641490999941,
-      "contentHash": "ba58b6a2b895e1b7430b8ad9b58b75b9",
+      "lastModificationDate": 1641506840180,
+      "contentHash": "2e70d01f281581fa93eeb7b09b677013",
       "sourceName": "contracts/ProjectFactory.sol",
       "solcConfig": {
         "version": "0.8.11",

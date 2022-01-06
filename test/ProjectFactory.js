@@ -44,6 +44,7 @@ describe("Project contract", () => {
         .connect(addr1)
         .contribute({ value: ethers.utils.parseUnits("0.01", "ether") });
       const total = await hardhatProject.contributors(addr1.address);
+      expect(total).to.equal(ethers.utils.parseUnits("0.01", "ether"));
     });
     it("Can contribute multiple times", async () => {
       await hardhatProject
