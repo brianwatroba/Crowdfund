@@ -29,6 +29,7 @@ describe("Project contract", () => {
     it("Should set the right creator", async () => {
       expect(await hardhatProject.creator()).to.equal(creator.address);
     });
+    // multiple projects can exist at once
   });
 
   describe("contribute()", () => {

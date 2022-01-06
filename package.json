@@ -17,5 +17,8 @@
     "ethers": "^5.5.2",
     "hardhat": "^2.8.0",
     "nodemon": "^2.0.15"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.4.1"
   }
 }
