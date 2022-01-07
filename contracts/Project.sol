@@ -6,8 +6,8 @@ import "hardhat/console.sol";
 
 contract Project is ERC721 {
   
-  uint256 public fundingGoal;
   uint256 public constant minContribution = 0.01 ether;
+  uint256 public fundingGoal;
   uint256 public totalContributions;
   uint256 public deadline;
   uint256 public badgeCount;
