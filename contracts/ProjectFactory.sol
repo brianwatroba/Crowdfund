@@ -2,7 +2,6 @@
 pragma solidity ^0.8.11;
 
 import "./Project.sol";
-import "hardhat/console.sol";
 
 contract ProjectFactory {
   
@@ -14,5 +13,4 @@ contract ProjectFactory {
   }
  
   receive() external payable {}
-  fallback() external payable {}
 }

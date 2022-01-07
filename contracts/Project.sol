@@ -2,7 +2,6 @@
 pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "hardhat/console.sol";
 
 contract Project is ERC721 {
   
@@ -11,6 +10,9 @@ contract Project is ERC721 {
   uint256 public totalContributions;
   uint256 public deadline;
   uint256 public badgeCount;
+  uint256 private constant notEntered = 1;
+  uint256 private constant entered = 2;
+  uint256 private lockedStatus;
   bool public cancelled = false;
   address public creator;
   mapping(address => uint256) public contributors;
@@ -25,10 +27,18 @@ contract Project is ERC721 {
     _;
   }
 
+  modifier nonReentrant {
+    require(lockedStatus != entered, "No re entry permitted");
+    lockedStatus = entered;
+    _;
+    lockedStatus = notEntered;
+  }
+
   constructor(uint256 _fundingGoal, address _sender) ERC721("Badge", "BDG") {
     creator = _sender;
     fundingGoal = _fundingGoal;
     deadline = block.timestamp + 30 days;
+    lockedStatus = notEntered;
   }
 
   /// @dev Contribute ETH to a project. Awards badge NFT for each 1 ETH contributed
@@ -42,7 +52,7 @@ contract Project is ERC721 {
   }
 
   /// @dev Creator can withdraw a number of funds if project meets funding goal
-  function withdraw(uint256 _amount) external onlyCreator {
+  function withdraw(uint256 _amount) external onlyCreator nonReentrant {
     require (totalContributions >= fundingGoal, "project must be fully funded");
     require(_amount <= totalContributions, "can only withdraw what was contributed");
     (bool success, ) = msg.sender.call{value: _amount}("");
@@ -50,12 +60,12 @@ contract Project is ERC721 {
   }
 
   /// @dev Contributors can get their contribution refunded if project is cancelled or doesn't meet goal
-  function refund() external {
+  function refund() external nonReentrant {
     require((totalContributions < fundingGoal && block.timestamp >= deadline) || cancelled, "project must be failed");
     require(contributors[msg.sender] > 0, "must have existing contribution balance");
     uint256 contribution = contributors[msg.sender];
     contributors[msg.sender] -= contribution;
-    totalContributions -= contribution; // do I need to do this?
+    totalContributions -= contribution;
     (bool success, ) = msg.sender.call{value: contribution}("");
     require(success, "failed to send refund");
   }
@@ -75,5 +85,4 @@ contract Project is ERC721 {
   }
 
   receive() external payable {}
-  fallback() external payable {}
 }
