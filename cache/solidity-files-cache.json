@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/brianwatroba/Documents/TempCode/student.brianwatroba/crowdfund/contracts/Project.sol": {
-      "lastModificationDate": 1641563292787,
-      "contentHash": "700846d201d17247b65bf01134e8c450",
+      "lastModificationDate": 1641565064446,
+      "contentHash": "c920f2f4b5bb4133dd385cb4a2a3dc4c",
       "sourceName": "contracts/Project.sol",
       "solcConfig": {
         "version": "0.8.11",
@@ -29,8 +29,7 @@
         }
       },
       "imports": [
-        "@openzeppelin/contracts/token/ERC721/ERC721.sol",
-        "hardhat/console.sol"
+        "@openzeppelin/contracts/token/ERC721/ERC721.sol"
       ],
       "versionPragmas": [
         "^0.8.11"
@@ -40,8 +39,8 @@
       ]
     },
     "/Users/brianwatroba/Documents/TempCode/student.brianwatroba/crowdfund/contracts/ProjectFactory.sol": {
-      "lastModificationDate": 1641506840180,
-      "contentHash": "2e70d01f281581fa93eeb7b09b677013",
+      "lastModificationDate": 1641563514508,
+      "contentHash": "de50887f22891bca4409802c42cf0590",
       "sourceName": "contracts/ProjectFactory.sol",
       "solcConfig": {
         "version": "0.8.11",
@@ -67,8 +66,7 @@
         }
       },
       "imports": [
-        "./Project.sol",
-        "hardhat/console.sol"
+        "./Project.sol"
       ],
       "versionPragmas": [
         "^0.8.11"

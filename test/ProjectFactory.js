@@ -8,7 +8,6 @@ describe("Project contract", () => {
   let hardhatProject;
   let creator;
   let addr1;
-  let addr2;
   let fundingGoal;
 
   beforeEach(async () => {
@@ -16,7 +15,7 @@ describe("Project contract", () => {
     ProjectFactory = await contractFactory.deploy();
     await ProjectFactory.deployed();
 
-    [creator, addr1, addr2] = await ethers.getSigners();
+    [creator, addr1] = await ethers.getSigners();
     fundingGoal = ethers.utils.parseUnits("10", "ether");
 
     Project = await ProjectFactory.connect(creator).createProject(fundingGoal);
@@ -202,6 +201,13 @@ describe("Project contract", () => {
           .connect(addr1)
           .withdraw(ethers.utils.parseUnits("10", "ether"))
       ).to.be.revertedWith("must be project creator");
+    });
+    it("Cannot withdraw more than exists", async () => {
+      await expect(
+        hardhatProject
+          .connect(creator)
+          .withdraw(ethers.utils.parseUnits("20", "ether"))
+      ).to.be.revertedWith("can only withdraw what was contributed");
     });
   });
 });
