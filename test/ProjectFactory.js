@@ -3,7 +3,6 @@ const { expect } = require("chai");
 describe("Project contract", () => {
   let contractFactory;
   let ProjectFactory;
-  let Project;
   let ProjectAddress;
   let hardhatProject;
   let creator;
@@ -18,7 +17,7 @@ describe("Project contract", () => {
     [creator, addr1] = await ethers.getSigners();
     fundingGoal = ethers.utils.parseUnits("10", "ether");
 
-    Project = await ProjectFactory.connect(creator).createProject(fundingGoal);
+    await ProjectFactory.connect(creator).createProject(fundingGoal);
     ProjectAddress = await ProjectFactory.deployedProjects(0);
     hardhatProject = await ethers.getContractAt("Project", ProjectAddress);
   });
