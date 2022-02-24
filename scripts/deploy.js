@@ -5,19 +5,19 @@ async function main() {
 
   console.log("Account balance:", (await deployer.getBalance()).toString());
 
-  contractFactory = await ethers.getContractFactory("ProjectFactory");
-  ProjectFactory = await contractFactory.deploy([deployer.address]);
+  const contractFactory = await ethers.getContractFactory("ProjectFactory");
+  const ProjectFactory = await contractFactory.deploy();
   await ProjectFactory.deployed();
 
-  [creator, addr1] = await ethers.getSigners();
-  fundingGoal = ethers.utils.parseUnits("10", "ether");
+  // [creator, addr1] = await ethers.getSigners();
+  // const fundingGoal = ethers.utils.parseUnits("10", "ether");
 
-  await ProjectFactory.connect(creator).createProject(fundingGoal);
-  ProjectAddress = await ProjectFactory.deployedProjects(0);
-  hardhatProject = await ethers.getContractAt("Project", ProjectAddress);
+  // await ProjectFactory.connect(creator).createProject(fundingGoal);
+  // const ProjectAddress = await ProjectFactory.deployedProjects(0);
+  // const hardhatProject = await ethers.getContractAt("Project", ProjectAddress);
 
   console.log("ProjectFactory address:", ProjectFactory.address);
-  console.log("Project address:", hardhatProject.address);
+  // console.log("Project address:", hardhatProject.address);
 }
 
 main()
